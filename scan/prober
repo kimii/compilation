@@ -1,0 +1,104 @@
+#!/bin/bash
+
+write_log(){
+log_file_path=$1
+key=$2
+value=$3
+test ! -f $log_file_path && touch $log_file_path
+test ! -z "$(cat $log_file_path | grep ^$key=)" && sed -i "s/$key=.*$/$key=$value/g" $log_file_path || echo $key=$value >>$log_file_path
+}
+
+kv_to_json(){
+log_file_path=$1
+cat $log_file_path | python <(
+cat << "EOF"
+import json
+d={}
+while True:
+  try:
+    f=raw_input().strip().split('=')
+    d[f[0]]=f[1]
+  except:
+    break
+print json.dumps(d)
+EOF
+)
+}
+
+tr(){ #traceroute
+target_file_path=$1
+prefix=$(echo $target_file_path | sed 's/\.targets$//')
+
+timestamp=$(date +%s)
+date=$(date -d @$timestamp +%Y%m%d-%H:%M:%S)
+write_log $prefix.log start_time $date
+write_log $prefix.log target_num $(cat $target_file <(echo) | grep -v "^$" | wc -l)
+
+#start scamper in background
+nohup bash -c "scamper -c 'trace' -p 1000 -C $timestamp -o >(gzip >$prefix.warts.gz) -O warts -f $target_file_path" >/dev/null 2>&1 &
+
+#report back start-up result.
+test ! -z "$(ps -ef | grep -v grep | grep -e "scamper.*$prefix.*")" \
+&& python -c "import json; d={}; d['status']=0; d['date']='$date'; d['out_file']='"$prefix.warts.tar.gz"'; print json.dumps(d);" \
+|| python -c "import json; d={}; d['status']=-1; print json.dumps(d);"
+
+#daemon process
+export -f write_log
+nohup bash -c "while true; do test -z \"\$(ps -ef | grep -v grep | grep -e \"scamper.*$prefix.*\")\" && write_log $prefix.log end_time \$(date +%Y%m%d-%H:%M:%S) && exit; sleep 10; done" >/dev/null 2>&1 &
+}
+
+ar(){ #alias resolution
+iface_file_path=$1
+prefix=$(echo $iface_file_path | sed 's/\.ifaces$//')
+
+date=$(date +%Y%m%d-%H:%M:%S)
+timestamp=$(date +%s)
+write_log $prefix.log start_time $date
+write_log $prefix.log target_num $(cat $target_file <(echo) | grep -v "^$" | wc -l)
+
+#start iffinder in background
+iffinder=$(python -c "import json; conf=json.load(open('config.json')); print conf['iffinder'];")
+$iffinder -d -o $prefix -c 200 -r 500 $iface_file_path
+
+#daemon process
+export -f write_log
+nohup bash -c "while true; do test -z \"\$(ps -ef | grep -v grep | grep -e \"iffinder.*$prefix.*\")\" && write_log $prefix.log end_time \$(date +%Y%m%d-%H:%M:%S) && tar zcvf $prefix.iffinder.out.tar.gz $prefix.iffinder.out && ls $prefix.iffinder.* | grep -v '\\.tar\\.gz' | while read l; do rm \$l; done && exit; sleep 10; done" >/dev/null 2>&1 &
+}
+
+check(){
+prefix=$1
+
+test -f $prefix.log && test ! -z "$(cat $prefix.log | grep end_time)" \
+&& python -c "import json; d={}; d['status']=0; d['finished']=True; print json.dumps(d);" \
+|| python -c "import json; d={}; d['status']=0; d['finished']=False; print json.dumps(d);"
+}
+
+usage(){
+  echo "prober <\$commands> [\$args...]"
+  echo "COMMANDS:"
+  echo "  tr <\$prefix.targets>"
+  echo "  ar <\$prefix.ifaces>"
+  echo "  check <\$prefix>"
+}
+
+test $# -lt 1 && usage && exit
+
+cmd=$1
+case $cmd in
+  "tr")
+    test $# -lt 2 && usage && exit
+    tr $2
+    ;;
+  "ar")
+    test $# -lt 2 && usage && exit
+    ar $2
+    ;;
+  "check")
+    test $# -lt 2 && usage && exit
+    check $2
+    ;;
+  "*")
+    usage
+    exit
+    ;;
+esac

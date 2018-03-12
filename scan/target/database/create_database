@@ -1,0 +1,172 @@
+#!/bin/bash -e
+
+username=root
+password=root
+
+mysql -u $username -p$password -e "
+drop database if exists ip_geolocation;
+create database ip_geolocation;
+set names utf8;
+use ip_geolocation;
+create table maxmind_data (
+	id INT NOT NULL AUTO_INCREMENT,
+	ip_from int unsigned NOT NULL,
+	ip_to int unsigned NOT NULL,
+	continent_code varchar(2),
+	continent_name varchar(32),
+	country_code varchar(2),
+	country_name varchar(64),
+	region_code varchar(3),
+	region_name varchar(128),
+	region_2_code varchar(3),
+	region_2_name varchar(128),
+	city_name varchar(128),
+	time_zone varchar(128),
+	postal_code varchar(30),
+	latitude double,
+	longitude double,
+	accuracy_radius int,
+	index ip_from_index (ip_from),
+	index ip_to_index (ip_to),
+	index ip_from_to_index (ip_from,ip_to),
+	PRIMARY KEY ( id )
+)default charset=utf8;
+
+create table ipmarker_data (
+	id INT NOT NULL AUTO_INCREMENT,
+	ip_from int unsigned NOT NULL,
+	ip_to int unsigned NOT NULL,
+	country_name varchar(64),
+	region_name varchar(128),
+	city_name varchar(128),
+	isp_name varchar(128),
+	time_zone varchar(128),
+	postal_code varchar(30),
+	latitude double,
+	longitude double,
+	index ip_from_index (ip_from),
+	index ip_to_index (ip_to),
+	index ip_from_to_index (ip_from,ip_to),
+	PRIMARY KEY ( id )
+)default charset=utf8;
+
+create table chunzhen_data (
+	id INT NOT NULL AUTO_INCREMENT,
+	ip_from int unsigned NOT NULL,
+	ip_to int unsigned NOT NULL,
+	country_name varchar(64),
+	region_name varchar(128),
+	city_name varchar(128),
+	district_name varchar(128),
+	isp_name varchar(128),
+	index ip_from_index (ip_from),
+	index ip_to_index (ip_to),
+	index ip_from_to_index (ip_from,ip_to),
+	PRIMARY KEY ( id )
+)default charset=utf8;
+
+create table ip2locationlite_data(
+	id INT NOT NULL AUTO_INCREMENT,
+	ip_from int unsigned NOT NULL,
+	ip_to int unsigned NOT NULL,
+	country_code varchar(2),
+	country_name varchar(64),
+	region_name varchar(128),
+	city_name varchar(128),
+	latitude double,
+	longitude double,
+	postal_code varchar(30),
+	time_zone varchar(128),
+	index ip_from_index (ip_from),
+	index ip_to_index (ip_to),
+	index ip_from_to_index (ip_from,ip_to),
+	PRIMARY KEY ( id )
+)default charset=utf8;
+
+
+create table ip2location_data(
+	id INT NOT NULL AUTO_INCREMENT,
+	ip_from int unsigned NOT NULL,
+	ip_to int unsigned NOT NULL,
+	country_code varchar(2),
+	country_name varchar(64),
+	region_name varchar(128),
+	city_name varchar(128),
+	isp_name varchar(256),
+	domain_name varchar(128),
+	index ip_from_index (ip_from),
+	index ip_to_index (ip_to),
+	index ip_from_to_index (ip_from,ip_to),
+	PRIMARY KEY ( id )
+)default charset=utf8;
+
+create table aiwen_data(
+	id INT NOT NULL AUTO_INCREMENT,
+	ip_from int unsigned NOT NULL,
+	ip_to int unsigned NOT NULL,
+	continent_name varchar(16),
+	country_code varchar(16),
+	country_name varchar(64),
+	region_name varchar(128),
+	city_name varchar(128),
+	district_name varchar(128),
+	latitude double,
+	longitude double,
+	isp_name varchar(256),
+	index ip_from_index (ip_from),
+	index ip_to_index (ip_to),
+	index ip_from_to_index (ip_from,ip_to),
+	PRIMARY KEY ( id )
+)default charset=utf8;
+
+create table combine_data(
+	id INT NOT NULL AUTO_INCREMENT,
+	ip_from int unsigned NOT NULL,
+	ip_to int unsigned NOT NULL,
+	country_code varchar(2),
+	country_name varchar(64),
+	region_name varchar(128),
+	city_name varchar(128),
+	latitude double,
+	longitude double,
+	postal_code varchar(30),
+	time_zone varchar(128),
+	isp_name varchar(256),
+	domain_name varchar(128),
+	info_source varchar(16),
+	index ip_from_index (ip_from),
+	index ip_to_index (ip_to),
+	index ip_from_to_index (ip_from,ip_to),
+	PRIMARY KEY ( id )
+)default charset=utf8;
+
+create table new_combine_data(
+	ip_from int unsigned NOT NULL,
+	ip_to int unsigned NOT NULL,
+	country_code varchar(2),
+	country_name varchar(64),
+	region_name varchar(128),
+	city_name varchar(128),
+	latitude double,
+	longitude double,
+	postal_code varchar(30),
+	time_zone varchar(128),
+	isp_name varchar(256),
+	domain_name varchar(128),
+	info_source varchar(16),
+	index ip_from_index (ip_from),
+	index ip_to_index (ip_to),
+	index ip_from_to_index (ip_from,ip_to)
+)default charset=utf8;
+
+
+CREATE TABLE translate (
+	zh VARCHAR(50) NOT NULL,
+	en VARCHAR(100) NOT NULL,
+	level INT NOT NULL
+)default charset=utf8;
+
+quit"
+echo "database created!"
+
+exit 0

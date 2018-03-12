@@ -1,0 +1,94 @@
+#!/bin/bash
+vp_conf(){
+  cat config.json | tr '\n' ' ' | python -c "import json,sys; o=json.loads(raw_input()); [sys.stdout.write(k+' '+v+'\n') for k,v in o['manager']['vp']['$1'].items()]" \
+  | grep $2 | cut -d' ' -f2
+}
+
+start_trace(){
+  target_file_path=$1
+  vp=$2
+
+  username=$(vp_conf $vp username); ip=$(vp_conf $vp ip); ssh_port=$(vp_conf $vp ssh_port); password=$(vp_conf $vp password);
+  data_dir=$(vp_conf $vp data_dir); code_dir=$(vp_conf $vp code_dir);
+
+  expect -c "set timeout -1
+  spawn ssh $username@$ip -p $ssh_port \"mkdir -p $data_dir\"
+  expect -re \".*password.*\" {send \"$password\r\"}
+  expect eof"
+
+  expect -c "set timeout -1
+  spawn scp -P $ssh_port $target_file_path $username@$ip:$data_dir
+  expect -re \".*password.*\" {send \"$password\r\"}
+  expect eof"
+
+  expect -c "set timeout -1
+  spawn ssh $username@$ip -p $ssh_port \"$code_dir/prober tr $data_dir/$(basename $target_file_path)\"
+  expect -re \".*password.*\" {send \"$password\r\"}
+  expect eof"
+}
+
+sync_file(){
+  target_file_path=$1
+  vp=$2
+  directory=$3
+
+  prefix=$(echo $target_file_path | sed 's/\.targets$//')
+  username=$(vp_conf $vp username); ip=$(vp_conf $vp ip); ssh_port=$(vp_conf $vp ssh_port); password=$(vp_conf $vp password);
+  data_dir=$(vp_conf $vp data_dir); code_dir=$(vp_conf $vp code_dir)
+
+  expect -c "set timeout -1
+  spawn rsync -avrt --copy-links -e \"ssh -p $ssh_port\" $username@$ip:$data_dir/*.gz $directory
+  expect -re \".*password.*\" {send \"$password\r\"}
+  expect eof"
+  
+  expect -c "set timeout -1
+  spawn ssh $username@$ip -p $ssh_port \"$code_dir/prober check $data_dir/$(basename $prefix)\"
+  expect -re \".*password.*\" {send \"$password\r\"}
+  expect eof"
+}
+
+run_trace(){
+  target_file_path=$1
+  vp=$2
+  directory=$3
+
+  #start
+  read r < <(start_trace $target_file_path $vp | tee >(tail -n1) >&2 | python -c "import json; o=json.loads(raw_input()); print o['status']")
+  test $r -ne 0 && exit
+  #periodically sync
+  while true; do
+    read r < <(sync_file $target_file_path $vp $directory | tee >(tail -n1) >&2 | python -c "import json; o=json.loads(raw_input()); print o['finished']")
+    test "$r"x == "True"x && exit
+    sleep 200
+  done
+}
+
+usage(){
+  echo "manager <\$commands> [\$args...]"
+  echo "COMMANDS:"
+  echo "  run_trace <\$vp> <\$directory>"
+}
+
+test $# -lt 1 && usage && exit
+
+cmd=$1
+case $cmd in
+  "run_trace")
+    test $# -lt 3 && usage && exit
+
+    vp=$2
+    directory=$(realpath $3)
+
+    mkdir -p $directory
+    date=$(date +%Y%m%d-%H:%M:%S)
+    cd target/
+    ./target.sh gen_target_from_geodb -p $directory/$date.$vp
+    cd ../
+    
+    run_trace $directory/$date.$vp.targets $vp $directory
+    ;;
+  "*")
+    usage
+    exit
+    ;;
+esac
