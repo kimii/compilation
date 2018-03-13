@@ -33,7 +33,7 @@ sync_file(){
   directory=$3
 
   prefix=$(echo $target_file_path | sed 's/\.targets$//')
-  username=$(vp_conf $vp username); ip=$(vp_conf $vp ip); ssh_port=$(vp_conf $vp ssh_port); password=$(vp_conf $vp password);
+  username=$(vp_conf $vp username); ip=$(vp_conf $vp ip); ssh_port=$(vp_conf $vp ssh_port); printf -v password "%q" "$(vp_conf $vp password)";
   data_dir=$(vp_conf $vp data_dir); code_dir=$(vp_conf $vp code_dir)
 
   expect -c "set timeout -1
