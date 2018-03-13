@@ -1,0 +1,13 @@
+#!/bin/bash
+
+apt-get install -y build-essential libbz2-dev zlib1g-dev
+
+wget http://www.ris.ripe.net/source/bgpdump/libbgpdump-1.4.99.15.tgz
+tar zxvf libbgpdump-1.4.99.15.tgz
+cd libbgpdump-1.4.99.15/
+./configure
+make && make install
+cd ../
+
+test ! -z "$(cat /etc/ld.so.conf | grep 'include /usr/local/lib')" && echo 'include /usr/local/lib' >>/etc/ld.so.conf
+ldconfig
