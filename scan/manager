@@ -37,7 +37,7 @@ sync_file(){
   data_dir=$(vp_conf $vp data_dir); code_dir=$(vp_conf $vp code_dir)
 
   expect -c "set timeout -1
-  spawn rsync -avrt --copy-links -e \"ssh -p $ssh_port\" $username@$ip:$data_dir/*.gz $directory
+  spawn rsync -avrt --copy-links -e \"ssh -p $ssh_port\" $username@$ip:$data_dir/$(basename $prefix).warts.gz $directory
   expect -re \".*password.*\" {send \"$password\r\"}
   expect eof"
   
