@@ -1,0 +1,20 @@
+extends template
+
+block content
+  div(class="col-md-10")
+    h1(class="page-header") IP
+  div(class="col-md-10")
+    h2(class="sub-header") Edge List
+    label dot-decimal notation: x.x.x.x
+  div(class="col-md-10")
+    div(id="ip_form" class="form-inline form-group")
+      input(id="ip_text" type="text" class="form-control" placeholder="IP address")
+      button(type="submit" class="form-control" id="search_btn") search
+    
+      button(type="submit" class="form-control pull-right" id="go_btn") go
+      input(type="text" class="form-control pull-right" placeholder="page" id="go_text")
+  div(class="col-md-10" id="table_div")
+
+  div(class="col-md-10")
+    h2(class="sub-header") Topology Graph
+  div(class="col-md-10" id="graph_div")
