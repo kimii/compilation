@@ -232,14 +232,15 @@ export function myD3Graph(container, data, options){
   function update(){
     link = links.selectAll("line")
       .data(data.links);
+    link.exit().remove(); //exit
     link = link.enter().append("line");
     link.style("stroke", function(d){return "#3498db";})
       .style("opacity", 0.7)
       .style("stroke-width", 1); //enter
-    link.exit().remove(); //exit
     
     node = nodes.selectAll("circle")
       .data(data.nodes);
+    node.exit().remove(); //exit
     node = node.enter().append("circle");
     node.attr("r", 5)
       .attr("fill", "#3498db")
@@ -249,7 +250,6 @@ export function myD3Graph(container, data, options){
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended)); //enter
-    node.exit().remove(); //exit
 
     simulation
       .nodes(data.nodes)
