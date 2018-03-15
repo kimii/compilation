@@ -225,49 +225,26 @@ export function myD3Graph(container, data, options){
     .attr("class","links");
   var nodes = svg.append("g")
     .attr("class","nodes");
+  var link, node;
   
-  //somehow v=selectAll().data(); v.enter(); is different from selectAll().data().enter().
-  //need further investigation.
-  //WTF d3?
-  var link = links.selectAll("line")
-    .data(data.links)
-  .enter().append("line")
-    .style("stroke", function(d){return "#3498db";})
-    .style("opacity", 0.7)
-    .style("stroke-width", 1);
+  update();
   
-  var node = nodes.selectAll("circle")
-    .data(data.nodes)
-  .enter().append("circle")
-    .attr("r", 5)
-    .attr("fill", "#3498db")
-    .attr("id", function(d){return d.id;})
-    .call(d3.drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended));
-
-  simulation
-    .nodes(data.nodes)
-    .on("tick", ticked);
-  simulation.force("link")
-    .links(data.links);
-
   function update(){
     link = links.selectAll("line")
       .data(data.links);
-    link.enter().append("line")
-      .style("stroke", function(d){return "#3498db";})
+    link = link.enter().append("line");
+    link.style("stroke", function(d){return "#3498db";})
       .style("opacity", 0.7)
       .style("stroke-width", 1); //enter
     link.exit().remove(); //exit
     
     node = nodes.selectAll("circle")
       .data(data.nodes);
-    node.enter().append("circle")
-      .attr("r", 5)
+    node = node.enter().append("circle");
+    node.attr("r", 5)
       .attr("fill", "#3498db")
       .attr("id", function(d){return d.id;})
+      .on("dbclick", dbclicked)
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
@@ -317,6 +294,18 @@ export function myD3Graph(container, data, options){
     if (!d3.event.active) simulation.alphaTarget(0);
     d.fx = null;
     d.fy = null;
+  }
+
+  function collapse(){
+    return;
+  }
+  
+  function expand(){
+    return;
+  }
+  
+  function dbclicked(){
+    return;
   }
   
   return {
