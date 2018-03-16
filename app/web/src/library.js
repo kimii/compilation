@@ -217,7 +217,9 @@ export function myD3Graph(container, data, options){
   var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }))
     .force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(width/2, height/2));
+    .force("center", d3.forceCenter(width/2, height/2))
+    .force("xAxis",d3.forceX(width/2))
+    .force("yAxis",d3.forceY(height/2));
   
   window.addEventListener("resize", resized);
 
@@ -229,27 +231,46 @@ export function myD3Graph(container, data, options){
   
   update();
   
+  /*d3 selection in-depth explanation:
+    selectAll() selects corespoding DOM, even if there's none.
+    selectAll.data() joins data to DOM, and returns a update selection.
+    update.enter() returns a enter selection.
+    update.enter().append() will merge update and enter selection \
+      to recude code redundancy.
+    update.exit()
+
+    NOTE: by default, data join uses index.
+    if you use the dedicated ID to join data,
+    overwrite the key function of join:
+
+      selectAll.data(data, function(d){d.id});
+  */
   function update(){
     link = links.selectAll("line")
-      .data(data.links);
-    link.exit().remove(); //exit
-    link = link.enter().append("line");
-    link.style("stroke", function(d){return "#3498db";})
+      .data(data.links, function(d){return d.id;});
+    link.enter()
+      .append("line")
+      .style("stroke", function(d){return "#3498db";})
       .style("opacity", 0.7)
       .style("stroke-width", 1); //enter
+    //.exit().remove();
+    link.exit().style("stroke", "#ffaaff");
     
     node = nodes.selectAll("circle")
-      .data(data.nodes);
-    node.exit().remove(); //exit
-    node = node.enter().append("circle");
-    node.attr("r", 5)
-      .attr("fill", "#3498db")
-      .attr("id", function(d){return d.id;})
-      .on("dbclick", dbclicked)
-      .call(d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended)); //enter
+      .data(data.nodes, function(d){return d.id;});
+    node.enter()
+      .append("circle")
+        .attr("r", 5)
+        .attr("fill", "#3498db")
+        .attr("id", function(d){return d.id;})
+        .on("dbclick", dbclicked)
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended)) //enter
+      .append("title")
+        .text(function(d){return d.id;});
+    node.exit().remove();
 
     simulation
       .nodes(data.nodes)
@@ -260,12 +281,14 @@ export function myD3Graph(container, data, options){
   }
 
   function ticked(){
-    link.attr("x1", function(d) { return d.source.x; })
+    links.selectAll("line")
+      .attr("x1", function(d) { return d.source.x; })
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
 
-    node.attr("cx", function(d) { return d.x; })
+    nodes.selectAll("circle")
+      .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
   }
 
@@ -275,7 +298,9 @@ export function myD3Graph(container, data, options){
     svg
       .attr("width", width)
       .attr("height", height)
-    simulation.force("center", d3.forceCenter(width/2, height/2));
+    simulation.force("center", d3.forceCenter(width/2, height/2))
+      .force("xAxis",d3.forceX(width/2))
+      .force("yAxis",d3.forceY(height/2));
     simulation.restart();
   }
   
