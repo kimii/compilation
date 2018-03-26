@@ -143,4 +143,6 @@ test $# -lt 2 && echo 'collapse $aliases $links' && exit
 
 aliases=$1
 links=$2
-cat <(cat $aliases | union) <(echo '#') $links | sub | merge
+prefix=$(echo $links | sed 's/\.links$//')
+
+cat <(cat $aliases | union | tee $prefix.rtrnodes) <(echo '#') $links | sub | merge

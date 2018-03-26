@@ -4,8 +4,7 @@
 log(){
 echo $1 >&2;
 }
-
-
+export -f log
 
 #SUB
 warts2link(){
@@ -17,7 +16,7 @@ prefix=$(echo $input_file_path | sed 's/\.gz//' | sed 's/\.tar//')
 log $prefix #debug
 echo $prefix
 
-(test ! -z "$(echo $input_file_path | grep -E '\.tar\.gz$')" && tar zxf $input_file_path -O || gzip -cd $input_file_path) | sc_warts2text | perl trace2link.pl -p $prefix -
+(test ! -z "$(echo $input_file_path | grep -E '\.tar\.gz$')" && tar zxf $input_file_path -O || gzip -cd $input_file_path) | (test ! -z "$(echo $input_file_path | grep -E 'warts')" && sc_warts2text || cat) | perl trace2link.pl -p $prefix -
 #output_file_path: $prefix.links
 }
 
@@ -76,7 +75,7 @@ P=$2 #controll xargs concurrency
 
 #(warts)-[warts2link]->(links)
 export -f warts2link #export warts2link for xargs to call.
-ll=($(ls $d/*.warts.gz | xargs -I {} -n 1 -P $P bash -c 'warts2link {}'))
+ll=($(ls $d/*.warts.gz | head -n 4 | xargs -I {} -n 1 -P $P bash -c 'warts2link {}'))
 
 #(links)-[linkmerge]->(links)
 echo "merging ${#ll[*]} files" >&2
@@ -115,8 +114,8 @@ done
 usage(){
 echo 'run.sh <$command> [$args]'
 echo 'COMMANDS:'
-echo '  process_caida_directory <$directory> [$parallel=4]'
-echo '  process_vps_file <$warts_file_path> <$iffinder_file_path>'
+echo '  process_caida_date <$directory> [$parallel=4]'
+echo '  process_vps_date <$warts_file_path> <$iffinder_file_path>'
 }
 test $# -lt 1 && usage && exit
 
@@ -128,9 +127,9 @@ case $cmd in
     prefix=$directory/$(basename $directory)
 
     preprocess_directory $directory $parallel
-    link2iface $prefix.merged.links
-    ../scanner/prober $prefix.merged.ifaces
-    link_coll $prefix.merged.aliases $prefix.merged.links
+    #link2iface $prefix.merged.links
+    #../scanner/prober $prefix.merged.ifaces
+    #link_coll $prefix.merged.aliases $prefix.merged.links
     ;;
   "process_vps_date")
     test $# -lt 3 && usage && exit
@@ -141,6 +140,13 @@ case $cmd in
     link2iface $prefix.links
     tar zxf $iffinder_file_path -O | awk '$6 == "D" {print $1" "$2}' >$prefix.aliases
     link_coll $prefix.aliases $prefix.links
+    ;;
+  "combine_vps_directory")
+    test $# -lt 2 && usage && exit
+    directory=$2;
+    prefix=$directory/$(basename $directory)
+
+    preprocess_directory $directory 1
     ;;
   *)
     usage

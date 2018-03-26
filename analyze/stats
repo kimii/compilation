@@ -1,0 +1,104 @@
+#!/bin/bash
+
+links_stat(){
+cat $ifaces <(echo "#") $links | python <(
+cat << "EOF"
+ifaces={}
+while True:
+  l=raw_input().strip()
+  if l[0] == '#':
+    break
+  for r in l.split(' '):
+    ifaces[r]=''
+
+d={} #in/out degree
+nt=0 #number of total links
+nr=0 #number of router links
+while True:
+  try:
+    l=raw_input().strip()
+  except:
+    break
+  f=l.split(' ')
+
+  nt+=1
+
+  for i in range(2):
+    if not d.has_key(f[i]):
+      d[f[i]]=[0,0]
+    d[f[i]][i]+=1
+
+  if ifaces.has_key(f[1]):
+    nr+=1
+
+#projection of degree
+st=[ [0,-1],[0,-1] ] #{out,in}x{sum,max} => R
+sr=[ [0,-1],[0,-1] ]
+se=[ -1 ] #(in,max)
+for i in d.keys():
+  for j in range(2):
+    st[j][0]+=d[i][j]
+    if d[i][j]>st[j][1]:
+      st[j][1]=d[i][j]
+
+    if ifaces.has_key(i):
+     sr[j][0]+=d[i][j]
+     if d[i][j]>sr[j][1]:
+      sr[j][1]=d[i][j]
+    elif d[i][j]>se[0]:
+      se[0]=d[i][j]
+
+print "NODE_NUM,LINK_NUM,RTRNODE_NUM,RTRLINK_NUM"
+print ','.join(map(lambda x:str(x),[len(d),nt,len(ifaces),nr]))
+print "SUM_OUT_DEGREE,MAX_OUT_DEGREE,SUM_IN_DEGREE,MAX_IN_DEGREE"
+print ','.join(map(lambda x:str(x),[st[0][0],st[0][1],st[1][0],st[1][1]]))
+print "RTR_SUM_OUT_DEGREE,RTR_MAX_OUT_DEGREE,RTR_SUM_IN_DEGREE,RTR_MAX_IN_DEGREE,END_MAX_IN_DEGREE"
+print ','.join(map(lambda x:str(x),[sr[0][0],sr[0][1],sr[1][0],sr[1][1],se[0]]))
+EOF
+)
+}
+
+coll_stat(){
+cat $ifaces | wc -l
+cat $aliases | sed 's/ /\n/g' | wc -l
+comm -1 -2 <(cat $aliases | sed 's/ /\n/g' | sort -u) \
+<(cat $ifaces | sort -u) | wc -l
+
+cat $rtrnodes | python <(
+cat << "EOF"
+d={}
+while True:
+  try:
+    l=raw_input().strip()
+  except:
+    break
+  f=l.split()
+  if not d.has_key(len(f)):
+    d[len(f)]=1
+    continue
+  d[len(f)]+=1
+print "NUM_IFACE,NUM"
+for k in sorted(d.keys()):
+  print ','.join(map(lambda x:str(x),[k,d[k]]))
+EOF
+)
+
+}
+
+test $# -lt 1 && exit
+
+cmd=$1
+case $cmd in
+  "links_stat")
+    test $# -ne 3 && exit
+    links=$2; ifaces=$3;
+    links_stat $links $ifaces
+    ;;
+  "coll_stat")
+    test $# -ne 4 && exit
+    aliases=$2; rtrnodes=$3; ifaces=$4;
+    coll_stat $aliases $rtrnodes $ifaces
+    ;;
+  *)
+    exit;;
+esac
