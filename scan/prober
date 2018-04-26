@@ -32,7 +32,7 @@ prefix=$(echo $target_file_path | sed 's/\.targets$//')
 timestamp=$(date +%s)
 date=$(date -d @$timestamp +%Y%m%d-%H:%M:%S)
 write_log $prefix.log start_time $date
-write_log $prefix.log target_num $(cat $target_file <(echo) | grep -v "^$" | wc -l)
+write_log $prefix.log target_num $(cat $target_file_path <(echo) | grep -v "^$" | wc -l)
 
 #start scamper in background
 nohup bash -c "scamper -c 'trace' -p 1000 -C $timestamp -o >(gzip >$prefix.warts.gz) -O warts -f $target_file_path" >/dev/null 2>&1 &
