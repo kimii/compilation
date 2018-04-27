@@ -54,7 +54,7 @@ prefix=$(echo $iface_file_path | sed 's/\.ifaces$//')
 date=$(date +%Y%m%d-%H:%M:%S)
 timestamp=$(date +%s)
 write_log $prefix.log start_time $date
-write_log $prefix.log target_num $(cat $target_file <(echo) | grep -v "^$" | wc -l)
+write_log $prefix.log target_num $(cat $target_file_path <(echo) | grep -v "^$" | wc -l)
 
 #start iffinder in background
 iffinder=$(python -c "import json; conf=json.load(open('config.json')); print conf['iffinder'];")

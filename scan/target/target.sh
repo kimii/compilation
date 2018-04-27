@@ -1,7 +1,8 @@
 #!/bin/bash
 
 get(){
-cl=$( #country list
+test $# -lt 1 && exit
+cl_8=$( #country list
 cat << "EOF"
 TW
 HK
@@ -13,6 +14,54 @@ AF
 LY
 EOF
 )
+
+cl_us=$(
+cat << "EOF"
+US
+EOF
+)
+
+cl_cn=$(
+cat << "EOF"
+CN
+EOF
+)
+
+cl_ru=$(
+cat << "EOF"
+RU
+EOF
+)
+
+cl_kp=$(
+cat << "EOF"
+KP
+EOF
+)
+
+cl_jp=$(
+cat << "EOF"
+JP
+EOF
+)
+
+case $1 in
+  "8")
+    cl=("${cl_8[@]}") ;;
+  "US")
+    cl=("${cl_us[@]}") ;;
+  "CN")
+    cl=("${cl_cn[@]}") ;;
+  "RU")
+    cl=("${cl_ru[@]}") ;;
+  "KP")
+    cl=("${cl_kp[@]}") ;;
+  "JP")
+    cl=("${cl_jp[@]}") ;;
+  "*")
+    echo "choose the right country!"
+    exit ;;
+esac
 
 tl=$( #table list
 cat << "EOF"
@@ -183,7 +232,7 @@ EOF
 usage(){
 echo 'target.sh <$command> [$options]'
 echo 'COMMANDS:'
-echo '  gen_target_from_geodb <-p $output_file_name_prefix> [-o sample_policy] [-d sample_density]'
+echo '  gen_target_from_geodb <-p $output_file_name_prefix> [-o sample_policy] [-d sample_density] [-c sample_country]'
 echo '  gen_target_from_bgp'
 }
 test $# -lt 1 && usage && exit
@@ -199,6 +248,8 @@ while getopts "qp:t:f:" opt; do
       policy=$OPTARG ;;
     d)
       density=$OPTARG ;;
+    c)
+      country=$OPTARG ;;    
     *)
       usage
       exit -1;;
@@ -209,9 +260,9 @@ cmd=$1
 case $cmd in
   "gen_target_from_geodb")
     test -z "${prefix+x}" && usage && exit
-    density=${density:=28}; policy=${policy:='union'}
+    density=${density:=28}; policy=${policy:='union'}; country=$(country:='8')
 
-    test ! -d .tmp && get
+    test ! -d .tmp && get country
 
     test -z "${quiet+x}" && echo "aggr > $prefix.aggr" >&2
     aggr > $prefix.aggr

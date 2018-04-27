@@ -66,7 +66,7 @@ run_trace(){
 usage(){
   echo "manager <\$commands> [\$args...]"
   echo "COMMANDS:"
-  echo "  run_trace <\$vp> <\$directory>"
+  echo "  run_trace <\$vp> <\$directory> <\$country>"
 }
 
 test $# -lt 1 && usage && exit
@@ -74,15 +74,17 @@ test $# -lt 1 && usage && exit
 cmd=$1
 case $cmd in
   "run_trace")
-    test $# -lt 3 && usage && exit
+    test $# -lt 4 && usage && exit
 
     vp=$2
     directory=$(realpath $3)
-
+    country=$4
+    test ! "$country"x == "8"x && density='26' || density='28'
+    
     mkdir -p $directory
     date=$(date +%Y%m%d-%H:%M:%S)
     cd target/
-    ./target.sh gen_target_from_geodb -p $directory/$date.$vp
+    ./target.sh gen_target_from_geodb -p $directory/$date.$vp -c $country -d $density
     cd ../
     
     run_trace $directory/$date.$vp.targets $vp $directory
