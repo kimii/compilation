@@ -8,6 +8,7 @@ cd scamper-cvs-20141211e/
 ./configure
 make && make install
 cd ../
+rm scamper-cvs-20141211e.tar.gz
 
 test ! -z "$(cat /etc/ld.so.conf | grep 'include /usr/local/lib')" && echo 'include /usr/local/lib' >>/etc/ld.so.conf
 ldconfig
