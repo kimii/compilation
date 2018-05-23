@@ -1,67 +1,21 @@
 #!/bin/bash
 
 get(){
-test $# -lt 1 && exit
-cl_8=$( #country list
-cat << "EOF"
-TW
-HK
-IR
-PK
-SY
-IQ
-AF
-LY
+#cl=$( #country list
+#cat << "EOF"
+#TW
+#EOF
+#)
+
+cl=$(cat ../task.json | tr '\n' ' ' | python <(
+cat <<"EOF"
+import json
+t=json.loads(raw_input())
+for c in t['task']['target']['generate_target']['cl']:
+  print c
 EOF
 )
-
-cl_us=$(
-cat << "EOF"
-US
-EOF
 )
-
-cl_cn=$(
-cat << "EOF"
-CN
-EOF
-)
-
-cl_ru=$(
-cat << "EOF"
-RU
-EOF
-)
-
-cl_kp=$(
-cat << "EOF"
-KP
-EOF
-)
-
-cl_jp=$(
-cat << "EOF"
-JP
-EOF
-)
-
-case $1 in
-  "8")
-    cl=("${cl_8[@]}") ;;
-  "US")
-    cl=("${cl_us[@]}") ;;
-  "CN")
-    cl=("${cl_cn[@]}") ;;
-  "RU")
-    cl=("${cl_ru[@]}") ;;
-  "KP")
-    cl=("${cl_kp[@]}") ;;
-  "JP")
-    cl=("${cl_jp[@]}") ;;
-  "*")
-    echo "choose the right country!"
-    exit ;;
-esac
 
 tl=$( #table list
 cat << "EOF"
@@ -232,7 +186,7 @@ EOF
 usage(){
 echo 'target.sh <$command> [$options]'
 echo 'COMMANDS:'
-echo '  gen_target_from_geodb <-p $output_file_name_prefix> [-o sample_policy] [-d sample_density] [-c sample_country]'
+echo '  gen_target_from_geodb <-p $output_file_name_prefix> [-o sample_policy] [-d sample_density]'
 echo '  gen_target_from_bgp'
 }
 test $# -lt 1 && usage && exit
@@ -248,8 +202,6 @@ while getopts "qp:t:f:" opt; do
       policy=$OPTARG ;;
     d)
       density=$OPTARG ;;
-    c)
-      country=$OPTARG ;;    
     *)
       usage
       exit -1;;
@@ -260,9 +212,11 @@ cmd=$1
 case $cmd in
   "gen_target_from_geodb")
     test -z "${prefix+x}" && usage && exit
-    density=${density:=28}; policy=${policy:='union'}; country=$(country:='8')
-
-    test ! -d .tmp && get country
+    density=${density:=28}; policy=${policy:='union'}
+    density=$(python -c "import json; conf=json.load(open('../task.json')); print conf['task']['target']['generate_target']['density'];")
+    policy=$(python -c "import json; conf=json.load(open('../task.json')); print conf['task']['target']['generate_target']['policy'];")
+    
+    test ! -d .tmp && get
 
     test -z "${quiet+x}" && echo "aggr > $prefix.aggr" >&2
     aggr > $prefix.aggr
