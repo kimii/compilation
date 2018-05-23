@@ -5,6 +5,7 @@ usage(){
 
 test $# -lt 1 && usage && exit
 task=$1
+cat $task
 
 monitors=$(cat task.json | tr '\n' ' ' | python <(
 cat <<"EOF"
