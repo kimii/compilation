@@ -118,6 +118,7 @@ case $cmd in
   "delete")
     test $# -lt 3 && usage && exit
     delete $2 $3
+    ;;
   "*")
     usage
     exit

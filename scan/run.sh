@@ -1,6 +1,6 @@
 #! /bin/bash
 usage(){
-  echo "usage: nohup run.sh task.json > log/task-$(date +%Y%m%d-%H:%M:%S).log 2>&1 &"
+  echo "usage: nohup ./run.sh task.json > log/task-\$(date +%Y%m%d-%H:%M:%S).log 2>&1 &"
 }
 
 test $# -lt 1 && usage && exit

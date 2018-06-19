@@ -75,7 +75,7 @@ P=$2 #controll xargs concurrency
 
 #(warts)-[warts2link]->(links)
 export -f warts2link #export warts2link for xargs to call.
-ll=($(ls $d/*.warts.gz | head -n 4 | xargs -I {} -n 1 -P $P bash -c 'warts2link {}'))
+ll=($(ls $d/*.warts.gz | xargs -I {} -n 1 -P $P bash -c 'warts2link {}'))
 
 #(links)-[linkmerge]->(links)
 echo "merging ${#ll[*]} files" >&2
