@@ -35,8 +35,7 @@ write_log $prefix.log start_time $date
 write_log $prefix.log target_num $(cat $target_file_path <(echo) | grep -v "^$" | wc -l)
 
 #start scamper in background
-#nohup bash -c "scamper -c 'trace' -p 300 -C $timestamp -o >(gzip >$prefix.warts.gz) -O warts -f $target_file_path" >/dev/null 2>&1 &
-nohup bash -c "scamper -c 'trace' -p 300 -C $timestamp -o $prefix.warts -O warts -f $target_file_path" >/dev/null 2>&1 &
+nohup bash -c "scamper -c 'trace' -p 600 -C $timestamp -o $prefix.warts -O warts -f $target_file_path" >/dev/null 2>&1 &
 
 
 #report back start-up result.
